@@ -1,3 +1,6 @@
+repeat task.wait() until game:IsLoaded()
+game.Players.LocalPlayer.CharacterAdded:Wait()
+
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
 
 local Window = OrionLib:MakeWindow({
@@ -59,7 +62,7 @@ local function getClosestTree()
 	return closest
 end
 
--- TAB MAIN
+-- MAIN TAB
 local MainTab = Window:MakeTab({
 	Name = "Main Features",
 	Icon = "rbxassetid://4483345998",
