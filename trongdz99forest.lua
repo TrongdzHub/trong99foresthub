@@ -1,8 +1,23 @@
 repeat task.wait() until game:IsLoaded()
-game.Players.LocalPlayer.CharacterAdded:Wait()
 
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
+local player = game.Players.LocalPlayer
+if not player.Character then
+	player.CharacterAdded:Wait()
+end
 
+-- LOAD ORION
+local success, OrionLib = pcall(function()
+	return loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
+end)
+
+if not success then
+	warn("❌ Không thể load Orion Library!")
+	return
+end
+
+print("✅ Orion loaded successfully!")
+
+-- WINDOW
 local Window = OrionLib:MakeWindow({
 	Name = "🔥 99 Nights: Forest PREMIUM V2",
 	HidePremium = false,
@@ -19,7 +34,6 @@ getgenv().AutoCollect = false
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local player = Players.LocalPlayer
 
 -- GET ROOT
 local function getRoot()
@@ -62,14 +76,14 @@ local function getClosestTree()
 	return closest
 end
 
--- MAIN TAB
+-- TAB MAIN
 local MainTab = Window:MakeTab({
 	Name = "Main Features",
 	Icon = "rbxassetid://4483345998",
 	PremiumOnly = false
 })
 
--- AUTO FARM
+-- AUTO CHOP TREE
 MainTab:AddToggle({
 	Name = "Auto Chop Tree",
 	Default = false,
@@ -166,7 +180,7 @@ MainTab:AddToggle({
 	end
 })
 
--- SETTINGS
+-- SETTINGS TAB
 local SettingTab = Window:MakeTab({
 	Name = "Settings",
 	Icon = "rbxassetid://4483345998"
