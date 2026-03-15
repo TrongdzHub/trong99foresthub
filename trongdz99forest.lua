@@ -5,26 +5,18 @@ if not player.Character then
 	player.CharacterAdded:Wait()
 end
 
--- LOAD ORION
-local success, OrionLib = pcall(function()
-	return loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
-end)
+-- LOAD RAYFIELD
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
-if not success then
-	warn("❌ Không thể load Orion Library!")
-	return
-end
-
-print("✅ Orion loaded successfully!")
-
--- WINDOW
-local Window = OrionLib:MakeWindow({
-	Name = "🔥 99 Nights: Forest PREMIUM V2",
-	HidePremium = false,
-	SaveConfig = true,
-	ConfigFolder = "ForestV2",
-	IntroText = "Trong dz Loading...",
-	Icon = "rbxassetid://97554009847628"
+local Window = Rayfield:CreateWindow({
+	Name = "🌲 99 Nights Forest Hub",
+	LoadingTitle = "Forest Hub",
+	LoadingSubtitle = "by Cubi",
+	ConfigurationSaving = {
+		Enabled = true,
+		FolderName = "ForestHub",
+		FileName = "Config"
+	}
 })
 
 -- VARIABLES
@@ -77,16 +69,13 @@ local function getClosestTree()
 end
 
 -- TAB MAIN
-local MainTab = Window:MakeTab({
-	Name = "Main Features",
-	Icon = "rbxassetid://4483345998",
-	PremiumOnly = false
-})
+local MainTab = Window:CreateTab("Main", 4483345998)
 
--- AUTO CHOP TREE
-MainTab:AddToggle({
+-- AUTO CHOP
+MainTab:CreateToggle({
 	Name = "Auto Chop Tree",
-	Default = false,
+	CurrentValue = false,
+	Flag = "AutoFarm",
 	Callback = function(Value)
 
 		getgenv().AutoFarm = Value
@@ -113,9 +102,10 @@ MainTab:AddToggle({
 })
 
 -- AUTO UPGRADE
-MainTab:AddToggle({
+MainTab:CreateToggle({
 	Name = "Auto Upgrade",
-	Default = false,
+	CurrentValue = false,
+	Flag = "AutoUpgrade",
 	Callback = function(Value)
 
 		getgenv().AutoUpgrade = Value
@@ -139,9 +129,10 @@ MainTab:AddToggle({
 })
 
 -- AUTO COLLECT
-MainTab:AddToggle({
+MainTab:CreateToggle({
 	Name = "Auto Collect Items",
-	Default = false,
+	CurrentValue = false,
+	Flag = "AutoCollect",
 	Callback = function(Value)
 
 		getgenv().AutoCollect = Value
@@ -180,17 +171,12 @@ MainTab:AddToggle({
 	end
 })
 
--- SETTINGS TAB
-local SettingTab = Window:MakeTab({
-	Name = "Settings",
-	Icon = "rbxassetid://4483345998"
-})
+-- TAB SETTINGS
+local SettingsTab = Window:CreateTab("Settings", 4483345998)
 
-SettingTab:AddButton({
+SettingsTab:CreateButton({
 	Name = "Destroy Script",
 	Callback = function()
-		OrionLib:Destroy()
+		Rayfield:Destroy()
 	end
 })
-
-OrionLib:Init()
