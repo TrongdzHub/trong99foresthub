@@ -1,182 +1,179 @@
 repeat task.wait() until game:IsLoaded()
 
-local player = game.Players.LocalPlayer
-if not player.Character then
-	player.CharacterAdded:Wait()
-end
-
--- LOAD RAYFIELD
+-- LOAD UI
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 local Window = Rayfield:CreateWindow({
-	Name = "🌲 99 Nights Forest Hub",
-	LoadingTitle = "Forest Hub",
-	LoadingSubtitle = "by Cubi",
-	ConfigurationSaving = {
-		Enabled = true,
-		FolderName = "ForestHub",
-		FileName = "Config"
-	}
+   Name = "Cubi Forest Hub",
+   LoadingTitle = "Cubi Hub",
+   LoadingSubtitle = "99 Nights In Forest",
+   ToggleUIKeybind = "RightControl",
+   ConfigurationSaving = {
+      Enabled = false
+   }
 })
 
--- VARIABLES
-getgenv().AutoFarm = false
-getgenv().AutoUpgrade = false
-getgenv().AutoCollect = false
+local Main = Window:CreateTab("Farm", 4483362458)
+local Esp = Window:CreateTab("ESP", 4483362458)
 
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
--- GET ROOT
-local function getRoot()
-	if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-		return player.Character.HumanoidRootPart
-	end
-	return nil
-end
-
--- FIND TREE
-local function getClosestTree()
-
-	local root = getRoot()
-	if not root then return nil end
-
-	local closest = nil
-	local dist = math.huge
-
-	for _,v in pairs(workspace:GetChildren()) do
-
-		if v.Name:find("Tree") or v.Name:find("Wood") then
-
-			local part = v:FindFirstChildWhichIsA("BasePart")
-
-			if part then
-
-				local d = (root.Position - part.Position).Magnitude
-
-				if d < dist then
-					dist = d
-					closest = part
-				end
-
-			end
-
-		end
-
-	end
-
-	return closest
-end
-
--- TAB MAIN
-local MainTab = Window:CreateTab("Main", 4483345998)
-
+------------------------------------------------
 -- AUTO CHOP
-MainTab:CreateToggle({
-	Name = "Auto Chop Tree",
-	CurrentValue = false,
-	Flag = "AutoFarm",
-	Callback = function(Value)
+------------------------------------------------
 
-		getgenv().AutoFarm = Value
+getgenv().AutoChop = false
 
-		while getgenv().AutoFarm do
-
-			local tree = getClosestTree()
-			local root = getRoot()
-
-			if tree and root then
-
-				root.CFrame = tree.CFrame * CFrame.new(0,0,3)
-
-				pcall(function()
-					ReplicatedStorage.Events.Interact:FireServer(tree)
-				end)
-
-			end
-
-			task.wait(0.4)
-
-		end
-	end
+Main:CreateToggle({
+   Name = "Auto Chop",
+   CurrentValue = false,
+   Callback = function(v)
+      getgenv().AutoChop = v
+   end
 })
 
--- AUTO UPGRADE
-MainTab:CreateToggle({
-	Name = "Auto Upgrade",
-	CurrentValue = false,
-	Flag = "AutoUpgrade",
-	Callback = function(Value)
+task.spawn(function()
+while task.wait(0.3) do
+if getgenv().AutoChop then
+local char = game.Players.LocalPlayer.Character
+if char then
+local tool = char:FindFirstChildOfClass("Tool")
+if tool then
+tool:Activate()
+end
+end
+end
+end
+end)
 
-		getgenv().AutoUpgrade = Value
+------------------------------------------------
+-- AUTO FARM TREE
+------------------------------------------------
 
-		while getgenv().AutoUpgrade do
+getgenv().AutoFarmTree = false
 
-			local upgrades = {"Fireplace","Chest","Axe","Sword"}
-
-			for _,v in pairs(upgrades) do
-
-				pcall(function()
-					ReplicatedStorage.Events.Upgrade:FireServer(v)
-				end)
-
-			end
-
-			task.wait(1.5)
-
-		end
-	end
+Main:CreateToggle({
+   Name = "Auto Farm Tree",
+   CurrentValue = false,
+   Callback = function(v)
+      getgenv().AutoFarmTree = v
+   end
 })
 
--- AUTO COLLECT
-MainTab:CreateToggle({
-	Name = "Auto Collect Items",
-	CurrentValue = false,
-	Flag = "AutoCollect",
-	Callback = function(Value)
+task.spawn(function()
+while task.wait(1) do
+if getgenv().AutoFarmTree then
 
-		getgenv().AutoCollect = Value
+for i,v in pairs(workspace:GetDescendants()) do
+if v.Name:lower():find("tree") and v:IsA("Part") then
 
-		while getgenv().AutoCollect do
+local hrp = game.Players.LocalPlayer.Character.HumanoidRootPart
+hrp.CFrame = v.CFrame + Vector3.new(0,3,0)
 
-			pcall(function()
+local tool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
+if tool then
+tool:Activate()
+end
 
-				local campfire = workspace:FindFirstChild("Campfire") or workspace:FindFirstChild("Fire")
+task.wait(2)
 
-				if campfire and workspace:FindFirstChild("DroppedItems") then
+end
+end
 
-					local firePart = campfire:FindFirstChildWhichIsA("BasePart")
+end
+end
+end)
 
-					if firePart then
+------------------------------------------------
+-- AUTO COLLECT WOOD
+------------------------------------------------
 
-						for _,item in pairs(workspace.DroppedItems:GetChildren()) do
+getgenv().AutoWood = false
 
-							if item:IsA("BasePart") then
-								item.CFrame = firePart.CFrame * CFrame.new(0,2,0)
-							elseif item:IsA("Model") and item.PrimaryPart then
-								item:SetPrimaryPartCFrame(firePart.CFrame * CFrame.new(0,2,0))
-							end
-
-						end
-
-					end
-
-				end
-
-			end)
-
-			task.wait(0.6)
-
-		end
-	end
+Main:CreateToggle({
+   Name = "Auto Collect Wood",
+   CurrentValue = false,
+   Callback = function(v)
+      getgenv().AutoWood = v
+   end
 })
 
--- TAB SETTINGS
-local SettingsTab = Window:CreateTab("Settings", 4483345998)
+task.spawn(function()
+while task.wait(1) do
+if getgenv().AutoWood then
 
-SettingsTab:CreateButton({
-	Name = "Destroy Script",
-	Callback = function()
-		Rayfield:Destroy()
-	end
+for i,v in pairs(workspace:GetDescendants()) do
+if v.Name:lower():find("wood") and v:IsA("Part") then
+game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.CFrame
+end
+end
+
+end
+end
+end)
+
+------------------------------------------------
+-- ESP BEAR
+------------------------------------------------
+
+getgenv().BearESP = false
+
+Esp:CreateToggle({
+   Name = "ESP Bear",
+   CurrentValue = false,
+   Callback = function(v)
+      getgenv().BearESP = v
+   end
 })
+
+task.spawn(function()
+while task.wait(2) do
+if getgenv().BearESP then
+
+for i,v in pairs(workspace:GetDescendants()) do
+if v.Name == "Bear" then
+if not v:FindFirstChild("Highlight") then
+
+local h = Instance.new("Highlight")
+h.Parent = v
+h.FillColor = Color3.fromRGB(255,0,0)
+
+end
+end
+end
+
+end
+end
+end)
+
+------------------------------------------------
+-- ESP TREE
+------------------------------------------------
+
+getgenv().TreeESP = false
+
+Esp:CreateToggle({
+   Name = "ESP Tree",
+   CurrentValue = false,
+   Callback = function(v)
+      getgenv().TreeESP = v
+   end
+})
+
+task.spawn(function()
+while task.wait(2) do
+if getgenv().TreeESP then
+
+for i,v in pairs(workspace:GetDescendants()) do
+if v.Name:lower():find("tree") then
+if not v:FindFirstChild("Highlight") then
+
+local h = Instance.new("Highlight")
+h.Parent = v
+h.FillColor = Color3.fromRGB(0,255,0)
+
+end
+end
+end
+
+end
+end
+end)
