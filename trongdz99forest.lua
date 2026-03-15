@@ -1,48 +1,20 @@
 repeat task.wait() until game:IsLoaded()
 
--- LOAD UI
+-- LOAD RAYFIELD
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 local Window = Rayfield:CreateWindow({
    Name = "Cubi Forest Hub",
+   Icon = "rbxassetid://97554009847628", -- logo Cubi
    LoadingTitle = "Cubi Hub",
-   LoadingSubtitle = "99 Nights In Forest",
-   ToggleUIKeybind = "RightControl",
+   LoadingSubtitle = "99 Nights Forest",
    ConfigurationSaving = {
       Enabled = false
    }
 })
 
-local Main = Window:CreateTab("Farm", 4483362458)
-local Esp = Window:CreateTab("ESP", 4483362458)
-
-------------------------------------------------
--- AUTO CHOP
-------------------------------------------------
-
-getgenv().AutoChop = false
-
-Main:CreateToggle({
-   Name = "Auto Chop",
-   CurrentValue = false,
-   Callback = function(v)
-      getgenv().AutoChop = v
-   end
-})
-
-task.spawn(function()
-while task.wait(0.3) do
-if getgenv().AutoChop then
-local char = game.Players.LocalPlayer.Character
-if char then
-local tool = char:FindFirstChildOfClass("Tool")
-if tool then
-tool:Activate()
-end
-end
-end
-end
-end)
+local Main = Window:CreateTab("Main", 4483362458)
+local Combat = Window:CreateTab("Combat", 4483362458)
 
 ------------------------------------------------
 -- AUTO FARM TREE
@@ -62,7 +34,7 @@ task.spawn(function()
 while task.wait(1) do
 if getgenv().AutoFarmTree then
 
-for i,v in pairs(workspace:GetDescendants()) do
+for _,v in pairs(workspace:GetDescendants()) do
 if v.Name:lower():find("tree") and v:IsA("Part") then
 
 local hrp = game.Players.LocalPlayer.Character.HumanoidRootPart
@@ -83,24 +55,24 @@ end
 end)
 
 ------------------------------------------------
--- AUTO COLLECT WOOD
+-- AUTO COLLECT
 ------------------------------------------------
 
-getgenv().AutoWood = false
+getgenv().AutoCollect = false
 
 Main:CreateToggle({
    Name = "Auto Collect Wood",
    CurrentValue = false,
    Callback = function(v)
-      getgenv().AutoWood = v
+      getgenv().AutoCollect = v
    end
 })
 
 task.spawn(function()
 while task.wait(1) do
-if getgenv().AutoWood then
+if getgenv().AutoCollect then
 
-for i,v in pairs(workspace:GetDescendants()) do
+for _,v in pairs(workspace:GetDescendants()) do
 if v.Name:lower():find("wood") and v:IsA("Part") then
 game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.CFrame
 end
@@ -111,32 +83,34 @@ end
 end)
 
 ------------------------------------------------
--- ESP BEAR
+-- KILL BEAR
 ------------------------------------------------
 
-getgenv().BearESP = false
+getgenv().KillBear = false
 
-Esp:CreateToggle({
-   Name = "ESP Bear",
+Combat:CreateToggle({
+   Name = "Kill Bear",
    CurrentValue = false,
    Callback = function(v)
-      getgenv().BearESP = v
+      getgenv().KillBear = v
    end
 })
 
 task.spawn(function()
-while task.wait(2) do
-if getgenv().BearESP then
+while task.wait(1) do
+if getgenv().KillBear then
 
-for i,v in pairs(workspace:GetDescendants()) do
-if v.Name == "Bear" then
-if not v:FindFirstChild("Highlight") then
+for _,v in pairs(workspace:GetDescendants()) do
+if v.Name == "Bear" and v:FindFirstChild("HumanoidRootPart") then
 
-local h = Instance.new("Highlight")
-h.Parent = v
-h.FillColor = Color3.fromRGB(255,0,0)
+game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame =
+v.HumanoidRootPart.CFrame * CFrame.new(0,0,3)
 
+local tool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
+if tool then
+tool:Activate()
 end
+
 end
 end
 
@@ -145,35 +119,23 @@ end
 end)
 
 ------------------------------------------------
--- ESP TREE
+-- FLOATING BUTTON (MOBILE MENU)
 ------------------------------------------------
 
-getgenv().TreeESP = false
+local ScreenGui = Instance.new("ScreenGui")
+local Button = Instance.new("TextButton")
 
-Esp:CreateToggle({
-   Name = "ESP Tree",
-   CurrentValue = false,
-   Callback = function(v)
-      getgenv().TreeESP = v
-   end
-})
+ScreenGui.Parent = game.CoreGui
 
-task.spawn(function()
-while task.wait(2) do
-if getgenv().TreeESP then
+Button.Parent = ScreenGui
+Button.Size = UDim2.new(0,60,0,60)
+Button.Position = UDim2.new(0,20,0.5,0)
+Button.Text = "MENU"
+Button.BackgroundColor3 = Color3.fromRGB(0,170,255)
 
-for i,v in pairs(workspace:GetDescendants()) do
-if v.Name:lower():find("tree") then
-if not v:FindFirstChild("Highlight") then
+local open = true
 
-local h = Instance.new("Highlight")
-h.Parent = v
-h.FillColor = Color3.fromRGB(0,255,0)
-
-end
-end
-end
-
-end
-end
+Button.MouseButton1Click:Connect(function()
+open = not open
+Rayfield:Toggle()
 end)
