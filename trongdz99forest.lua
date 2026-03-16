@@ -1,125 +1,133 @@
-repeat task.wait() until game:IsLoaded()
+-- Chờ game load hoàn toàn để tránh lỗi script chạy trước game
+if not game:IsLoaded() then game.Loaded:Wait() end
 
-local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+-- Sử dụng bản Orion được tối ưu cho Mobile/Delta
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
-local Window = Rayfield:CreateWindow({
-   Name = "Cubi Forest Hub | Premium V2",
-   Icon = "rbxassetid://97554009847628",
-   LoadingTitle = "Cubi Hub",
-   LoadingSubtitle = "Forest Survival",
-   ConfigurationSaving = {Enabled = false}
+local Window = OrionLib:MakeWindow({
+    Name = "🔥 CUBI HUB V5 | PREMIUM", 
+    HidePremium = false, 
+    SaveConfig = true, 
+    ConfigFolder = "CubiForestV5",
+    IntroText = "Đang khởi tạo Cubi Hub...",
+    Icon = "rbxassetid://97554009847628" -- Logo của bạn
 })
 
--- Biến điều khiển
+-- Biến toàn cục (Global Variables)
 getgenv().AutoFarm = false
-getgenv().Collect = false
-getgenv().KillBear = false
+getgenv().AutoCollect = false
+getgenv().AutoUpgrade = false
 
-local Main = Window:CreateTab("Farm", 4483362458)
-local Combat = Window:CreateTab("Combat", 4483362458)
-local Player = Window:CreateTab("Player", 4483362458)
-
-------------------------------------------------
--- AUTO FARM TREE (FIXED)
-------------------------------------------------
-Main:CreateToggle({
-    Name = "Auto Farm Tree",
-    CurrentValue = false,
-    Callback = function(v)
-        getgenv().AutoFarm = v
-    end
+-- [TAB: FARM]
+local FarmTab = Window:MakeTab({
+    Name = "Auto Farm",
+    Icon = "rbxassetid://4483345998"
 })
 
-task.spawn(function()
-    while task.wait(0.5) do
-        if getgenv().AutoFarm then
-            pcall(function()
-                for _, v in pairs(workspace:GetChildren()) do -- Chỉ quét vật thể lớn ở Workspace
-                    if v.Name:lower():find("tree") and getgenv().AutoFarm then
-                        local targetPart = v:FindFirstChild("Wood") or v:FindFirstChildWhichIsA("BasePart")
-                        if targetPart then
-                            local hrp = game.Players.LocalPlayer.Character.HumanoidRootPart
-                            -- Bay lên trên cây một chút để không bị kẹt
-                            hrp.CFrame = targetPart.CFrame * CFrame.new(0, 5, 0)
-                            
-                            local tool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
-                            if tool then
-                                tool:Activate()
+FarmTab:AddToggle({
+    Name = "Auto Chặt Gỗ (Smart)",
+    Default = false,
+    Callback = function(Value)
+        getgenv().AutoFarm = Value
+        task.spawn(function()
+            while getgenv().AutoFarm do
+                pcall(function()
+                    for _, v in pairs(workspace:GetChildren()) do
+                        if not getgenv().AutoFarm then break end
+                        
+                        -- Tìm vật thể có tên chứa chữ "Tree"
+                        if v.Name:lower():find("tree") then
+                            local part = v:FindFirstChildWhichIsA("BasePart") or v:FindFirstChild("Wood")
+                            if part then
+                                local player = game.Players.LocalPlayer
+                                local character = player.Character
+                                
+                                -- Di chuyển tới cây (đứng cao hơn 1 chút để không kẹt)
+                                character.HumanoidRootPart.CFrame = part.CFrame * CFrame.new(0, 5, 0)
+                                
+                                -- Tự động trang bị Rìu từ Backpack hoặc Character
+                                local tool = player.Backpack:FindFirstChildOfClass("Tool") or character:FindFirstChildOfClass("Tool")
+                                if tool then
+                                    character.Humanoid:EquipTool(tool)
+                                    tool:Activate()
+                                end
+                                task.wait(0.5) -- Tốc độ chặt (chỉnh thấp hơn nếu muốn nhanh)
                             end
-                            task.wait(0.5) -- Đợi chặt xong 1 nhịp rồi mới tìm cây khác
                         end
                     end
-                end
-            end)
-        end
-    end
-end)
+                end)
+                task.wait(0.1)
+            end
+        end)
+    end    
+})
 
-------------------------------------------------
--- AUTO COLLECT WOOD (FIXED)
-------------------------------------------------
-Main:CreateToggle({
-    Name = "Auto Collect Wood",
-    CurrentValue = false,
-    Callback = function(v)
-        getgenv().Collect = v
+-- [TAB: ITEMS]
+local ItemTab = Window:MakeTab({
+    Name = "Vật Phẩm",
+    Icon = "rbxassetid://4483345998"
+})
+
+ItemTab:AddToggle({
+    Name = "Hút Gỗ/Vật Phẩm về mình",
+    Default = false,
+    Callback = function(Value)
+        getgenv().AutoCollect = Value
+        task.spawn(function()
+            while getgenv().AutoCollect do
+                pcall(function()
+                    local myHrp = game.Players.LocalPlayer.Character.HumanoidRootPart
+                    for _, v in pairs(workspace:GetChildren()) do
+                        -- Hút các vật phẩm có tên Log, Wood, Food...
+                        if v:IsA("BasePart") and (v.Name:find("Log") or v.Name:find("Wood") or v.Name:find("Food")) then
+                            v.CFrame = myHrp.CFrame
+                        end
+                    end
+                end)
+                task.wait(0.5)
+            end
+        end)
+    end    
+})
+
+ItemTab:AddButton({
+    Name = "Gom tất cả về Lửa Trại",
+    Callback = function()
+        pcall(function()
+            local camp = workspace:FindFirstChild("Campfire") or workspace:FindFirstChild("Fire")
+            if camp then
+                for _, v in pairs(workspace:GetChildren()) do
+                    if v:IsA("BasePart") and (v.Name:find("Log") or v.Name:find("Wood")) then
+                        v.CFrame = camp.CFrame * CFrame.new(0, 2, 0)
+                    end
+                end
+            end
+        end)
     end
 })
 
-task.spawn(function()
-    while task.wait(0.3) do
-        if getgenv().Collect then
-            for _, v in pairs(workspace:GetChildren()) do
-                if (v.Name:lower():find("wood") or v.Name:lower():find("item")) and v:IsA("BasePart") then
-                    v.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
-                end
-            end
-        end
-    end
-end)
-
-------------------------------------------------
--- KILL BEAR (SMART TP)
-------------------------------------------------
-Combat:CreateToggle({
-    Name = "Kill Bear",
-    CurrentValue = false,
-    Callback = function(v)
-        getgenv().KillBear = v
-    end
+-- [TAB: PLAYER]
+local PlayerTab = Window:MakeTab({
+    Name = "Người Chơi",
+    Icon = "rbxassetid://4483345998"
 })
 
-task.spawn(function()
-    while task.wait(0.1) do
-        if getgenv().KillBear then
-            for _, v in pairs(workspace:GetChildren()) do
-                if v.Name == "Bear" and v:FindFirstChild("HumanoidRootPart") then
-                    -- Teleport ra sau lưng gấu để né đòn
-                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
-                    local tool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
-                    if tool then tool:Activate() end
-                end
-            end
-        end
-    end
-end)
+PlayerTab:AddSlider({
+    Name = "Tốc Độ (WalkSpeed)",
+    Min = 16,
+    Max = 200,
+    Default = 16,
+    Callback = function(v)
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v
+    end    
+})
 
-------------------------------------------------
--- FLOATING BUTTON (HỖ TRỢ MOBILE)
-------------------------------------------------
-local ScreenGui = Instance.new("ScreenGui")
-local ImageButton = Instance.new("ImageButton")
+-- Thông báo khi load xong
+OrionLib:MakeNotification({
+    Name = "Cubi Hub V5",
+    Content = "Script đã sẵn sàng! Chúc bạn farm vui vẻ.",
+    Image = "rbxassetid://97554009847628",
+    Time = 5
+})
 
-ScreenGui.Parent = game.CoreGui
-ImageButton.Parent = ScreenGui
-ImageButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-ImageButton.BackgroundTransparency = 1.0
-ImageButton.Position = UDim2.new(0, 10, 0, 150)
-ImageButton.Size = UDim2.new(0, 50, 0, 50)
-ImageButton.Image = "rbxassetid://97554009847628" -- Logo của bạn
-
-ImageButton.MouseButton1Click:Connect(function()
-    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.RightControl, false, game)
-end)
-
--- Các chức năng khác (WalkSpeed, Teleport) giữ nguyên logic cũ nhưng bọc trong pcall để tránh lỗi.
+OrionLib:Init()
